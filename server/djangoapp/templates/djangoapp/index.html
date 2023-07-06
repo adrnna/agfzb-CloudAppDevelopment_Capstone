@@ -13,27 +13,24 @@
 
 </head>
 
-    <body>
-     This is the index page of your Django app!
-     <nav class="navbar navbar-expand navbar-dark bg-dark">
-        <a class="navbar-brand" href="#">Dealership Review</a>
-        <div class="collapse navbar-collapse">
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Best Cars Dealerships</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'djangoapp:about' %}">About Us</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Contact Us</a>
-                </li>
-            </ul>
+<body>
+    This is the index page of your Django app!
+
+                        
+
+    <nav class="navbar navbar-default navbar-fixed-top"> 
+        <div class="container-fluid">
+            <div class="navbar-brand">
+                <a class="navbar-brand" href="#">Dealership Review</a>
+                <a class="navbar-brand" href="{% url 'djangoapp:about' %}">About</a>              
+                <a class="navbar-brand" href="{% url 'djangoapp:contact' %}">Contact</a>  
+            </div>
         </div>
     </nav>
 
+
     <!--Add a dealer table here -->
 
-    </body>
+</body>
 
 </html>
