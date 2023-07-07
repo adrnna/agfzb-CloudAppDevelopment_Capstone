@@ -3,7 +3,7 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
 from .models import CarModel, CarMake
-from .restapis import post_request, get_dealers_from_cf, get_dealer_reviews_from_cf, get_dealer_by_id_from_cf
+from .restapis import post_request, get_dealers_from_cf, get_dealer_reviews_from_cf, get_dealer_by_id
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
 from datetime import datetime
@@ -82,8 +82,29 @@ def get_dealerships(request):
 
 
 # Create a `get_dealer_details` view to render the reviews of a dealer
-# def get_dealer_details(request, dealer_id):
-# ...
+def get_dealer_details(request, dealer_id):
+    if request.method == "GET":
+            url = "https://us-south.functions.appdomain.cloud/api/v1/web/832fded6-63ea-4e95-8f65-b5cd7ce11246/dealership-package/get-dealership"
+            # Get dealers from the URL
+            dealerships = get_dealers_from_cf(url)
+            # Find the dealer with the given dealer_id
+            for dealer in dealerships:
+                if dealer.id == dealer_id:
+                    # Return the dealer information as JSON response
+                    dealer_info = {
+                        "id": dealer.id,
+                        "city": dealer.city,
+                        "state": dealer.st,
+                        "address": dealer.address,
+                        "zip": dealer.zip,
+                        "lat": dealer.lat,
+                        "long": dealer.long,
+                        "short_name": dealer.short_name,
+                        "full_name": dealer.full_name
+                    }
+                    return JsonResponse(dealer_info)
+            # If no dealer found with the given dealer_id, return a 404 response
+            return JsonResponse({"error": "Dealer not found"}, status=404)
 
 # Create a `add_review` view to submit a review
 # def add_review(request, dealer_id):
