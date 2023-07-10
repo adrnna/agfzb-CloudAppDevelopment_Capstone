@@ -46,7 +46,7 @@ class CarDealer:
         self.full_name = full_name
         # Dealer id
         self.id = id
-        # Location lat
+        # Location lat 
         self.lat = lat
         # Location long
         self.long = long
