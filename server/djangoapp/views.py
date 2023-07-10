@@ -75,10 +75,10 @@ def get_dealerships(request, **kwargs):
             # Retrieve a specific dealer by ID
             dealer_id = kwargs['id']
             url = f"https://us-south.functions.appdomain.cloud/api/v1/web/832fded6-63ea-4e95-8f65-b5cd7ce11246/dealership-package/get-dealership?id={dealer_id}"
-        elif 'state' in kwargs:
+        elif 'st' in kwargs:
             # Retrieve dealerships by state
             state = kwargs['st']
-            url = f"https://us-south.functions.appdomain.cloud/api/v1/web/832fded6-63ea-4e95-8f65-b5cd7ce11246/dealership-package/get-dealership?state={state}"
+            url = f"https://us-south.functions.appdomain.cloud/api/v1/web/832fded6-63ea-4e95-8f65-b5cd7ce11246/dealership-package/get-dealership?st={state}"
         else:
             #return render(request, 'djangoapp/index.html', context)
             url = "https://us-south.functions.appdomain.cloud/api/v1/web/832fded6-63ea-4e95-8f65-b5cd7ce11246/dealership-package/get-dealership"
@@ -93,27 +93,20 @@ def get_dealerships(request, **kwargs):
 # Create a `get_dealer_details` view to render the reviews of a dealer
 def get_dealer_details(request, dealer_id):
     if request.method == "GET":
-            url = "https://us-south.functions.appdomain.cloud/api/v1/web/832fded6-63ea-4e95-8f65-b5cd7ce11246/dealership-package/get-dealership"
-            # Get dealers from the URL
-            dealerships = get_dealers_from_cf(url)
-            # Find the dealer with the given dealer_id
-            for dealer in dealerships:
-                if dealer.id == dealer_id:
-                    # Return the dealer information as JSON response
-                    dealer_info = {
-                        "id": dealer.id,
-                        "city": dealer.city,
-                        "state": dealer.st,
-                        "address": dealer.address,
-                        "zip": dealer.zip,
-                        "lat": dealer.lat,
-                        "long": dealer.long,
-                        "short_name": dealer.short_name,
-                        "full_name": dealer.full_name
-                    }
-                    return JsonResponse(dealer_info)
-            # If no dealer found with the given dealer_id, return a 404 response
-            return JsonResponse({"error": "Dealer not found"}, status=404)
+        url = f"https://us-south.functions.appdomain.cloud/api/v1/web/832fded6-63ea-4e95-8f65-b5cd7ce11246/dealership-package/get-review/review?dealerId={dealer_id}"
+        # Get dealer reviews from the URL
+        dealer_reviews = get_dealer_reviews_from_cf(url, dealer_id)
+        if dealer_reviews:
+            reviews = []
+            for review in dealer_reviews:
+                review_info = f"Review: {review.review}\nSentiment: {review.sentiment}"
+                reviews.append(review_info)
+            response = "\n\n".join(reviews)
+            return HttpResponse(response)
+        else:
+            # If no reviews found for the given dealer, return a 404 response
+            return HttpResponse("No reviews found for this dealer.", status=404)
+
 
 # Create a `add_review` view to submit a review
 # def add_review(request, dealer_id):
