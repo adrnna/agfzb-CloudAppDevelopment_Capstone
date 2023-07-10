@@ -12,10 +12,12 @@ import time
 # e.g., response = requests.get(url, params=params, headers={'Content-Type': 'application/json'},
 #                                     auth=HTTPBasicAuth('apikey', api_key))
 def get_request(url, **kwargs):
-    
-    # If argument contain API KEY
+    # If argument contains API key
     api_key = kwargs.get("api_key")
     print("GET from {} ".format(url))
+    
+    response = None  # Set initial value for response
+    
     try:
         if api_key:
             params = dict()
@@ -32,11 +34,17 @@ def get_request(url, **kwargs):
     except:
         # If any error occurs
         print("Network exception occurred")
+        return None  # Return None when exception occurs
 
-    status_code = response.status_code
-    print("With status {} ".format(status_code))
-    json_data = json.loads(response.text)
-    return json_data
+    if response is not None:
+        status_code = response.status_code
+        print("With status {} ".format(status_code))
+        json_data = json.loads(response.text)
+        return json_data
+    else:
+        return None
+
+
 
 # Create a `post_request` to make HTTP POST requests
 # e.g., response = requests.post(url, params=kwargs, json=payload)
@@ -56,10 +64,10 @@ def post_request(url, payload, **kwargs):
 # - Parse JSON results into a CarDealer object list
 def get_dealers_from_cf(url, **kwargs):
     results = []
-    state = kwargs.get("state")
-    print(state)
+    state = kwargs.get("st")
+    #print(state)
     dealer_id = kwargs.get("id")
-    print(dealer_id)
+    #print(dealer_id)
     if state:
         json_result = get_request(url, state = state)
     elif dealer_id:
@@ -69,7 +77,7 @@ def get_dealers_from_cf(url, **kwargs):
     # Call get_request with a URL parameter
     #json_result = get_request(url)
     if json_result:
-        print(json_result)
+        #print(json_result)
         # Get the row list in JSON as dealers
         #print(json_result)
         dealers = json_result#["body"]
@@ -122,27 +130,27 @@ def get_dealer_by_id(url, dealer_id):
     return None
 
 
-def get_dealer_reviews_from_cf(url, **kwargs):
+def get_dealer_reviews_from_cf(url, dealer_id):
     results = []
-    id = kwargs.get("id")
-    if id:
-        json_result = get_request(url, id=id)
-    else:
-        json_result = get_request(url)
-    # print(json_result)
+    if dealer_id:
+        json_result = get_request(url, dealerId=dealer_id)
     if json_result:
-        reviews = json_result["body"]["data"]["docs"]
+        if "error" in json_result:
+            # No reviews found for the given dealerId
+            return []
+        reviews = json_result  # Assuming reviews is a list of review objects
         for dealer_review in reviews:
+            # Process the review object
             review_obj = DealerReview(dealership=dealer_review["dealership"],
-                                   name=dealer_review["name"],
-                                   purchase=dealer_review["purchase"],
-                                   review=dealer_review["review"],
-                                   purchase_date="",
-                                   car_make="",
-                                   car_model="",
-                                   car_year="",
-                                   sentiment="",
-                                   id=dealer_review["id"])
+                                      name=dealer_review["name"],
+                                      purchase=dealer_review["purchase"],
+                                      review=dealer_review["review"],
+                                      purchase_date="",
+                                      car_make="",
+                                      car_model="",
+                                      car_year="",
+                                      sentiment="",
+                                      id=dealer_review["id"])
             if "purchase_date" in dealer_review:
                 review_obj.purchase_date = dealer_review["purchase_date"]
             if "car_make" in dealer_review:
@@ -159,19 +167,37 @@ def get_dealer_reviews_from_cf(url, **kwargs):
     return results
 
 
+
 # Create an `analyze_review_sentiments` method to call Watson NLU and analyze text
 # def analyze_review_sentiments(text):
 # - Call get_request() with specified arguments
 # - Get the returned sentiment label such as Positive or Negative
-def analyze_review_sentiments(dealerreview, **kwargs):
-    API_KEY=""
-    NLU_URL='https://api.us-south.natural-language-understanding.watson.cloud.ibm.com/instances/b916e718-dd11-4cbc-ba5e-17d01c165a7f'
-    params = json.dumps({"text": dealerreview, "features": {"sentiment": {}}})
-    response = requests.post(NLU_URL,data=params,headers={'Content-Type':'application/json'},auth=HTTPBasicAuth("apikey", API_KEY))
+def analyze_review_sentiments(dealerreview):
+    url = "https://api.au-syd.natural-language-understanding.watson.cloud.ibm.com/instances/53ad00c4-a0ad-46a0-8026-5d79bc73c404/v1/analyze?version=2020-08-01"
+    api_key = "qru5mU2inbdfwrQ0QVa3VYFb2dAnPtZBftgFKMT4Xe-x"
+    
+    if len(dealerreview) < 20:
+        return {"error": "Not enough text for sentiment analysis"}
+    
+    response = get_request(url, text=dealerreview, api_key=api_key, version='2020-08-01', features={'sentiment'}, return_analyzed_text=True)
+    
+    if response and "error" not in response:
+        sentiment = response["sentiment"]["document"]["label"]
+        return sentiment
+    elif response and "error" in response:
+        error_message = response["error"]
+        return {"error": error_message}
+    else:
+        return {"error": "Sentiment analysis request failed"}
+
+    #API_KEY=""
+    #NLU_URL='https://api.us-south.natural-language-understanding.watson.cloud.ibm.com/instances/b916e718-dd11-4cbc-ba5e-17d01c165a7f'
+    #params = json.dumps({"text": dealerreview, "features": {"sentiment": {}}})
+    #response = requests.post(NLU_URL,data=params,headers={'Content-Type':'application/json'},auth=HTTPBasicAuth("apikey", API_KEY))
     
     #print(response.json())
-    try:
-        sentiment=response.json()['sentiment']['document']['label']
-        return sentiment
-    except:
-        return "neutral"
+    #try:
+    #    sentiment=response.json()['sentiment']['document']['label']
+    #    return sentiment
+    #except:
+    #    return "neutral"
