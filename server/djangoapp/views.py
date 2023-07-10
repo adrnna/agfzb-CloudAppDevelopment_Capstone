@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect, HttpResponse, HttpResponseNotAllowed
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
 from .models import CarModel, CarMake
@@ -109,6 +109,39 @@ def get_dealer_details(request, dealer_id):
 
 
 # Create a `add_review` view to submit a review
-# def add_review(request, dealer_id):
-# ...
+def add_review(request, dealer_id):
+    if request.method == "POST":
+        # Check if the user is authenticated
+        if not request.user.is_authenticated:
+            return JsonResponse({"error": "Authentication required"}, status=401)
+        
+        # Create the review data
+        review = {
+            "time": datetime.utcnow().isoformat(),
+            "name": request.user.username,
+            "dealership": dealer_id,
+            "review": request.POST.get("review"),
+            "purchase": request.POST.get("purchase")
+            # Add any other attributes as needed
+        }
+        
+        # Create the JSON payload
+        json_payload = {
+            "review": review
+        }
+        
+        # Prepare the URL for the review-post cloud function
+        url = f"https://us-south.functions.appdomain.cloud/api/v1/web/832fded6-63ea-4e95-8f65-b5cd7ce11246/dealership-package/review-post/review"
+        
+        # Make the POST request to add the review
+        response = post_request(url, json_payload, dealerId=dealer_id)
+        
+        # Check the response and return an appropriate HTTP response
+        if response.get("error"):
+            return JsonResponse({"error": response["error"]}, status=400)
+        else:
+            return JsonResponse({"message": "Review added successfully"}, status=201)
+    
+    # Return a 405 Method Not Allowed if the request method is not POST
+    return HttpResponseNotAllowed(["POST"])
 
