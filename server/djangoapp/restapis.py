@@ -57,7 +57,9 @@ def post_request(url, payload, **kwargs):
 def get_dealers_from_cf(url, **kwargs):
     results = []
     state = kwargs.get("state")
+    print(state)
     dealer_id = kwargs.get("id")
+    print(dealer_id)
     if state:
         json_result = get_request(url, state = state)
     elif dealer_id:
@@ -67,6 +69,7 @@ def get_dealers_from_cf(url, **kwargs):
     # Call get_request with a URL parameter
     #json_result = get_request(url)
     if json_result:
+        print(json_result)
         # Get the row list in JSON as dealers
         #print(json_result)
         dealers = json_result#["body"]
