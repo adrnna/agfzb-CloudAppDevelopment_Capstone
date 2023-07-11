@@ -126,6 +126,7 @@ def add_review(request, dealer_id):
         print(f"HERE IS THE ID: {dealer.id}")
         return render(request, 'djangoapp/add_review.html', context)
     elif request.method == 'POST':
+        print(f"HERE IS THE DEALER: {dealer.full_name}")
         if request.user.is_authenticated:
             username = request.user.username
             car_id = request.POST.get("car")
@@ -134,21 +135,21 @@ def add_review(request, dealer_id):
             payload = {
                 "time": datetime.utcnow().isoformat(),
                 "name": username,
-                "dealership": dealer_id,
+                "dealership": dealer.full_name,
+                "id":dealer_id,
                 "review": request.POST.get("content"),
                 "purchase": request.POST.get("purchasecheck", False),
                 "purchase_date": request.POST.get("purchasedate"),
-                "carmake": car.make.name,
-                "carmodel": car.name
+                "car_make": car.make.name,
+                "car_model": car.name,
+                "sentiment":"",
             }
 
             new_payload = {
                 "review": payload
             }
-            print(new_payload)
             
             review_post_url = "https://us-south.functions.appdomain.cloud/api/v1/web/832fded6-63ea-4e95-8f65-b5cd7ce11246/dealership-package/post-review"
-            post_request(review_post_url, new_payload, id=dealer_id)
+            post_request(review_post_url, new_payload, dealer_id=dealer_id)
             
-            return redirect("djangoapp:dealer_details", dealer_id=dealer_id)
-
+            return redirect("djangoapp:dealer_details", dealer.id) #dealer_id=dealer_id)
