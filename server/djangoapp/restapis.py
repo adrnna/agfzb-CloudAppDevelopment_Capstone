@@ -105,17 +105,14 @@ def get_dealers_from_cf(url, **kwargs):
 def get_dealer_by_id(url, dealer_id):
     # Append the dealer_id to the URL
     url = f"{url}?id={dealer_id}"
-    
     # Call get_request with the modified URL and additional parameters
     json_result = get_request(url, dealerId=dealer_id)
-    
+    print(json_result[0])
     if json_result:
         # Get the dealer object from the JSON response
-        dealer = json_result#["body"]
-        
+        dealer = json_result[0]#["body"]
         # Get the content in the dealer object
         dealer_doc = dealer
-        
         # Create a CarDealer object with values in the dealer object
         dealer_obj = CarDealer(
             address=dealer_doc["address"],
