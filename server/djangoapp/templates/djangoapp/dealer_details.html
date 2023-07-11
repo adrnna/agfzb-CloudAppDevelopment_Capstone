@@ -13,7 +13,7 @@
     <nav class="navbar navbar-default navbar-fixed-top"> 
         <div class="container-fluid">
             <div class="navbar-brand">
-                <a class="navbar-brand" href="#">Dealership Review</a>
+                <a class="navbar-brand" href="{% url 'djangoapp:index' %}">Dealership Review</a>
                 <a class="navbar-brand" href="{% url 'djangoapp:about' %}">About</a>              
                 <a class="navbar-brand" href="{% url 'djangoapp:contact' %}">Contact</a>  
             </div>
@@ -21,7 +21,7 @@
             <ul class="nav navbar-nav navbar-right">
                 {% if user.is_authenticated %}
                 <li>
-                    <a class="btn btn-link" href="{% url 'djangoapp:add_review' %}">Add Review</a>
+                    <a class="btn btn-link" href="{% url 'djangoapp:add_review' dealer_id=dealer_id %}">Add Review</a>
                 </li>
                 
                 <li>
