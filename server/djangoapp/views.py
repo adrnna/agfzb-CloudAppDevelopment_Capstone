@@ -98,77 +98,57 @@ def get_dealer_details(request, dealer_id):
         url = f"https://us-south.functions.appdomain.cloud/api/v1/web/832fded6-63ea-4e95-8f65-b5cd7ce11246/dealership-package/get-review/review?dealerId={dealer_id}"
         # Get dealer reviews from the URL
         dealer_reviews = get_dealer_reviews_from_cf(url, dealer_id)
-        if dealer_reviews:
-            url_to_get_name = f"https://us-south.functions.appdomain.cloud/api/v1/web/832fded6-63ea-4e95-8f65-b5cd7ce11246/dealership-package/get-dealership?id={dealer_id}"
-            dealership_object = get_dealers_from_cf(url_to_get_name)
-            dealership_name = dealership_object[0].full_name
-            context['reviews'] = dealer_reviews
-            context['dealership_name'] = dealership_name
-            #return HttpResponse(response)
-            return render(request, 'djangoapp/dealer_details.html', context)
-        else:
+        #if dealer_reviews:
+        url_to_get_name = f"https://us-south.functions.appdomain.cloud/api/v1/web/832fded6-63ea-4e95-8f65-b5cd7ce11246/dealership-package/get-dealership?id={dealer_id}"
+        dealership_object = get_dealers_from_cf(url_to_get_name)
+        dealership_name = dealership_object[0].full_name
+        context['reviews'] = dealer_reviews
+        context['dealership_name'] = dealership_name
+        context['dealer_id'] = dealer_id
+        #return HttpResponse(response)
+        return render(request, 'djangoapp/dealer_details.html', context)
+        #else:
             # If no reviews found for the given dealer, return a 404 response
-            return HttpResponse("No reviews found for this dealer.", status=404)
+            #return HttpResponse("No reviews found for this dealer.", status=404)
 
 
 # Create a `add_review` view to submit a review
 def add_review(request, dealer_id):
-    if request.method == "POST":
-        # Check if the user is authenticated
-        if not request.user.is_authenticated:
-            return JsonResponse({"error": "Authentication required"}, status=401)
-        
-        # Get the actual values from the review form
-        review_time = datetime.utcnow().isoformat()
-        review_name = request.user.username
-        review_dealership = dealer_id
-        review_content = request.POST.get("content")
-        review_purchase = request.POST.get("purchase")
-        review_car = request.POST.get("car")
-        review_car_year = review_car.split("-")[1]
-        
-        # Create the review data
-        review = {
-            "time": review_time,
-            "name": review_name,
-            "dealership": review_dealership,
-            "review": review_content,
-            "purchase": review_purchase,
-            "car_make": review_car.split("-")[0],
-            "car_model": review_car.split("-")[1],
-            "car_year": review_car_year
-            # Add any other attributes as needed
-        }
-        
-        # Create the JSON payload
-        json_payload = {
-            "review": review
-        }
-        
-        # Prepare the URL for the review-post cloud function
-        url = f"https://us-south.functions.appdomain.cloud/api/v1/web/832fded6-63ea-4e95-8f65-b5cd7ce11246/dealership-package/review-post/review"
-        
-        # Make the POST request to add the review
-        response = post_request(url, json_payload, dealerId=dealer_id)
-        
-        # Check the response and return an appropriate HTTP response
-        if response.get("error"):
-            return JsonResponse({"error": response["error"]}, status=400)
-        else:
-            # Redirect to the dealer details page
-            return redirect("djangoapp:dealer_details", dealer_id=dealer_id)
-    
-    elif request.method == "GET":
-        # Query cars with the dealer id to be reviewed
-        cars = Car.objects.filter(dealer_id=dealer_id)
-        # Prepare the context with the queried cars
-        context = {
-            'cars': cars,
-        }
-        # Render the add_review.html template with the context
+    context = {}
+    dealer_url = "https://us-south.functions.appdomain.cloud/api/v1/web/832fded6-63ea-4e95-8f65-b5cd7ce11246/dealership-package/get-dealership"    
+    dealer = get_dealer_by_id(dealer_url, dealer_id)
+    #print(f"HERE IS THE DEALER: {dealer}")
+    context["dealer"] = dealer
+    if request.method == 'GET':
+        # Get cars for the dealer
+        cars = CarModel.objects.all()
+        context["cars"] = cars
+        print(f"HERE IS THE ID: {dealer.id}")
         return render(request, 'djangoapp/add_review.html', context)
+    elif request.method == 'POST':
+        if request.user.is_authenticated:
+            username = request.user.username
+            car_id = request.POST.get("car")
+            car = CarModel.objects.get(pk=car_id)
+            
+            payload = {
+                "time": datetime.utcnow().isoformat(),
+                "name": username,
+                "dealership": dealer_id,
+                "review": request.POST.get("content"),
+                "purchase": request.POST.get("purchasecheck", False),
+                "purchase_date": request.POST.get("purchasedate"),
+                "carmake": car.make.name,
+                "carmodel": car.name
+            }
 
-    # Return a 405 Method Not Allowed if the request method is neither GET nor POST
-    return HttpResponseNotAllowed(["GET", "POST"])
-
+            new_payload = {
+                "review": payload
+            }
+            print(new_payload)
+            
+            review_post_url = "https://us-south.functions.appdomain.cloud/api/v1/web/832fded6-63ea-4e95-8f65-b5cd7ce11246/dealership-package/post-review"
+            post_request(review_post_url, new_payload, id=dealer_id)
+            
+            return redirect("djangoapp:dealer_details", dealer_id=dealer_id)
 
