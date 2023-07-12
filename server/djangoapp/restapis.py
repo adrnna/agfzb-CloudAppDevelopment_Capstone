@@ -73,7 +73,6 @@ def get_dealers_from_cf(url, **kwargs):
     state = kwargs.get("st")
     #print(state)
     dealer_id = kwargs.get("id")
-    print(f"you are here in get dealers from: {dealer_id}")
     if state:
         json_result = get_request(url, state = state)
     elif dealer_id:
@@ -85,13 +84,11 @@ def get_dealers_from_cf(url, **kwargs):
     if json_result:
         #print(json_result)
         # Get the row list in JSON as dealers
-        print(f"you are with json result {json_result}")
         dealers = json_result#["body"]
         # For each dealer object
         for dealer in dealers:
             # Get its content in `doc` object
             dealer_doc = dealer#["doc"]
-            print(dealer_doc)
             # Create a CarDealer object with values in `doc` object
             dealer_obj = CarDealer(address=dealer_doc["address"], city=dealer_doc["city"], full_name=dealer_doc["full_name"],
                                    id=int(dealer_doc["id"]), lat=dealer_doc["lat"], long=dealer_doc["long"],
@@ -110,7 +107,6 @@ def get_dealer_by_id(url, dealer_id):
     url = f"{url}?id={dealer_id}"
     # Call get_request with the modified URL and additional parameters
     json_result = get_request(url, dealerId=dealer_id)
-    print(f"This should SPIT OUT THE JSON RESULT: {json_result}")
     if json_result:
         # Get the dealer object from the JSON response
         dealer = json_result[0]#["body"]
@@ -138,8 +134,6 @@ def get_dealer_reviews_from_cf(url, dealer_id):
     results = []
     if dealer_id:
         json_result = get_request(url, dealerId=dealer_id)
-        print(url)
-        print(f"\n \n BLABLABLA \n {json_result}")
     if json_result:
         if "error" in json_result:
             # No reviews found for the given dealerId
