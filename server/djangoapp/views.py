@@ -94,27 +94,21 @@ def get_dealerships(request, **kwargs):
 # Create a `get_dealer_details` view to render the reviews of a dealer
 def get_dealer_details(request, dealer_id):
     context = {}
-    try:
-        if request.method == "GET":
-            url = f"https://us-south.functions.appdomain.cloud/api/v1/web/832fded6-63ea-4e95-8f65-b5cd7ce11246/dealership-package/get-review/review?dealerId={dealer_id}"
-            # Get dealer reviews from the URL
-            dealer_reviews = get_dealer_reviews_from_cf(url, dealer_id)
-            #if dealer_reviews:
-            url_to_get_name = f"https://us-south.functions.appdomain.cloud/api/v1/web/832fded6-63ea-4e95-8f65-b5cd7ce11246/dealership-package/get-dealership?id={dealer_id}"
-            dealership_object = get_dealers_from_cf(url_to_get_name)
-            dealership_name = dealership_object[0].full_name
-            context['reviews'] = dealer_reviews
-            print(f"THESE ARE THE REVIEWS FROM THE DATABASE: {dealer_reviews}")
-            context['dealership_name'] = dealership_name
-            context['dealer_id'] = dealer_id
-            #return HttpResponse(response)
-            return render(request, 'djangoapp/dealer_details.html', context) 
-    except Exception as e:
-        # Handle the exception and display a custom error page
-        error_message = str(e)
-        context['error_message'] = error_message
-        return render(request, 'djangoapp/error.html', context, status=500)
-      
+    if request.method == "GET":
+        url = f"https://us-south.functions.appdomain.cloud/api/v1/web/832fded6-63ea-4e95-8f65-b5cd7ce11246/dealership-package/get-review/review?dealerId={dealer_id}"
+        # Get dealer reviews from the URL
+        dealer_reviews = get_dealer_reviews_from_cf(url, dealer_id)
+        #if dealer_reviews:
+        url_to_get_name = f"https://us-south.functions.appdomain.cloud/api/v1/web/832fded6-63ea-4e95-8f65-b5cd7ce11246/dealership-package/get-dealership?id={dealer_id}"
+        dealership_object = get_dealers_from_cf(url_to_get_name)
+        dealership_name = dealership_object[0].full_name
+        context['reviews'] = dealer_reviews
+        print(f"THESE ARE THE REVIEWS FROM THE DATABASE: {dealer_reviews}")
+        context['dealership_name'] = dealership_name
+        context['dealer_id'] = dealer_id
+        #return HttpResponse(response)
+        return render(request, 'djangoapp/dealer_details.html', context) 
+    
 
 # Create a `add_review` view to submit a review
 def add_review(request, dealer_id):
@@ -136,7 +130,7 @@ def add_review(request, dealer_id):
             car_id = request.POST.get("car")
             car = CarModel.objects.get(pk=car_id)
 
-         
+
             payload = {
                 "time": datetime.utcnow().isoformat(),
                 "name": username,
