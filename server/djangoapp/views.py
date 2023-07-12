@@ -13,9 +13,7 @@ import json
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
-
 # Create your views here.
-
 
 # Create an `about` view to render a static about page
 def about(request):
@@ -103,7 +101,6 @@ def get_dealer_details(request, dealer_id):
         dealership_object = get_dealers_from_cf(url_to_get_name)
         dealership_name = dealership_object[0].full_name
         context['reviews'] = dealer_reviews
-        print(f"THESE ARE THE REVIEWS FROM THE DATABASE: {dealer_reviews}")
         context['dealership_name'] = dealership_name
         context['dealer_id'] = dealer_id
         #return HttpResponse(response)
@@ -115,21 +112,17 @@ def add_review(request, dealer_id):
     context = {}
     dealer_url = "https://us-south.functions.appdomain.cloud/api/v1/web/832fded6-63ea-4e95-8f65-b5cd7ce11246/dealership-package/get-dealership"    
     dealer = get_dealer_by_id(dealer_url, dealer_id)
-    print(f"HERE IS THE DEALER: {dealer}")
     context["dealer"] = dealer
     if request.method == 'GET':
         # Get cars for the dealer
         cars = CarModel.objects.all()
         context["cars"] = cars
-        print(f"HERE IS THE ID: {dealer.id}")
         return render(request, 'djangoapp/add_review.html', context)
     elif request.method == 'POST':
-        print(f"HERE IS THE DEALER NAME: {dealer.full_name}")
         if request.user.is_authenticated:
             username = request.user.username
             car_id = request.POST.get("car")
             car = CarModel.objects.get(pk=car_id)
-
 
             payload = {
                 "time": datetime.utcnow().isoformat(),
@@ -142,8 +135,7 @@ def add_review(request, dealer_id):
                 "car_make": car.make.name,
                 "car_model": car.name,
                 "car_year": int(car.year.strftime("%Y")),
-                "sentiment":"",
-            }
+                "sentiment":"",}
 
             new_payload = {"review": payload}            
             review_post_url = "https://us-south.functions.appdomain.cloud/api/v1/web/832fded6-63ea-4e95-8f65-b5cd7ce11246/dealership-package/post-review"
