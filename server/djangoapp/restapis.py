@@ -50,14 +50,16 @@ def get_request(url, **kwargs):
 # e.g., response = requests.post(url, params=kwargs, json=payload)
 
 def post_request(url, json_payload, **kwargs):
-    print("POST to {} ".format(url))
+    print("POST to {}".format(url))
     try:
         response = requests.post(url, params=kwargs, json=json_payload)
-    except:
+        response.raise_for_status()  # Wait for request to complete and check for errors
+    except requests.exceptions.RequestException as e:
         # If any error occurs
-        print("Network exception occurred")
+        print("Network exception occurred:", e)
+        return None
     status_code = response.status_code
-    print("With status {} ".format(status_code))
+    print("With status {}".format(status_code))
     json_data = json.loads(response.text)
     return json_data
 
@@ -71,7 +73,7 @@ def get_dealers_from_cf(url, **kwargs):
     state = kwargs.get("st")
     #print(state)
     dealer_id = kwargs.get("id")
-    #print(dealer_id)
+    print(f"you are here in get dealers from: {dealer_id}")
     if state:
         json_result = get_request(url, state = state)
     elif dealer_id:
@@ -83,7 +85,7 @@ def get_dealers_from_cf(url, **kwargs):
     if json_result:
         #print(json_result)
         # Get the row list in JSON as dealers
-        #print(json_result)
+        print(f"you are with json result {json_result}")
         dealers = json_result#["body"]
         # For each dealer object
         for dealer in dealers:
@@ -92,7 +94,7 @@ def get_dealers_from_cf(url, **kwargs):
             print(dealer_doc)
             # Create a CarDealer object with values in `doc` object
             dealer_obj = CarDealer(address=dealer_doc["address"], city=dealer_doc["city"], full_name=dealer_doc["full_name"],
-                                   id=dealer_doc["id"], lat=dealer_doc["lat"], long=dealer_doc["long"],
+                                   id=int(dealer_doc["id"]), lat=dealer_doc["lat"], long=dealer_doc["long"],
                                    short_name=dealer_doc["short_name"],
                                    st=dealer_doc["st"], zip=dealer_doc["zip"])
             results.append(dealer_obj)
@@ -108,7 +110,7 @@ def get_dealer_by_id(url, dealer_id):
     url = f"{url}?id={dealer_id}"
     # Call get_request with the modified URL and additional parameters
     json_result = get_request(url, dealerId=dealer_id)
-    print(json_result[0])
+    print(f"This should SPIT OUT THE JSON RESULT: {json_result}")
     if json_result:
         # Get the dealer object from the JSON response
         dealer = json_result[0]#["body"]
@@ -136,10 +138,12 @@ def get_dealer_reviews_from_cf(url, dealer_id):
     results = []
     if dealer_id:
         json_result = get_request(url, dealerId=dealer_id)
+        print(url)
+        print(f"\n \n BLABLABLA \n {json_result}")
     if json_result:
         if "error" in json_result:
             # No reviews found for the given dealerId
-            return []
+            return results
         reviews = json_result  # Assuming reviews is a list of review objects
         for dealer_review in reviews:
             # Process the review object
